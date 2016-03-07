@@ -1,0 +1,31 @@
+# --- Set Variables for All Commands
+$vnetPrefix = '172.25.160.0/22'
+$GatewaySubnet = '172.25.160.0/28'
+$ProductionSubnet = '172.25.161.0/24'
+$Location = 'Australia East'
+$RGName = 'Azure-rgrp-ProdPrivate'
+$vnetName = 'MWH-AustraliaEast-Internal'
+$NGName = 'MWH-Sydney-POP'
+$NGPrefixes = 
+$GWIP = '159.21.128.9'
+$RMPIP = $vnetName & '-gwpip'
+$RMVNGIP = $vnetName & '-gwipc'
+$RMVNGWN = $vnetName & '-vnetgw'
+
+# --- Define Subnets
+$subnet1 = New-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -AddressPrefix $GatewaySubnet
+$subnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Production' -AddressPrefix $ProductionSubnet
+
+# --- Create VNET
+New-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $RGName -Location $Location -AddressPrefix $vnetPrefix -Subnet $subnet1, $subnet2
+# --- Create Local Network Gateway - This is the Device that a VPN Tunnel would terminate to.
+New-AzureRmLocalNetworkGateway -Name $NGName -ResourceGroupName $RGName -Location $Location -GatewayIpAddress $GWIP -AddressPrefix $NGPrefixes
+# --- Create a Public IP for The Azure Side of the VPN
+$gwpip= New-AzureRmPublicIpAddress -Name $RMPIP -ResourceGroupName $RGName -Location $Location -AllocationMethod Dynamic
+
+# --- Get the information needed to connect to the ExpressRoute Circuit
+$vnet = Get-AzureRmVirtualNetwork -Name $vnetName  -ResourceGroupName $RGName
+$subnet = Get-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -VirtualNetwork $vnet
+$gwipconfig = New-AzureRmVirtualNetworkGatewayIpConfig -Name $RMVNGIP -SubnetId $subnet.Id -PublicIpAddressId $gwpip.Id 
+
+New-AzureRmVirtualNetworkGateway -Name $RMVNGWN -ResourceGroupName $RGName -Location $Location -IpConfigurations $gwipconfig -GatewayType ExpressRoute -VpnType RouteBased
