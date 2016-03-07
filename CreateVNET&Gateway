@@ -13,7 +13,8 @@ $RGName = 'Azure-rgrp-ProdPrivate'      # Resource Group to Drop Resources Into
 $vnetName1 = "MWH-$Location1-Internal"  # VNET Name
 $vnetName2 = "MWH-$Location2-Internal"  # VNET Name
 $NGName = 'MWH-Sydney-POP'              # Name of the POP the ER's are in
-$NGPrefixes =                           # MWH Prefixes (Excludinging the current vNET)
+$NGPrefixes = "172.16.0.0/13,172.24.0.0/16,172.25.0.0,172.25.0.0/17,172.25.128.0/19,172.25.168.0/21,172.25.176.0/20,172.25.192.0/18,172.26.0.0/17,172.28.0.0/14"
+                                        # MWH Prefixes (Excludinging the current vNET)
 $GWIP = '159.21.128.9'                  # IP Of the Primary DMZ Router in the POP
 $RMPIP1 = "$vnetName-gwpip"              # Name of the GW IP Asssigned by MS
 $RMPIP2 = "$vnetName-gwpip"              # Name of the GW IP Asssigned by MS
