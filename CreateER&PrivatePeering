@@ -1,0 +1,20 @@
+
+$RGName = 'Azure-rgrp-ProdPrivate'      # Resource Group to Drop Resources Into
+$Location1 = 'AustraliaEast'            # Primary Azure Location
+$Location2 = 'AustraliaSouthEast'       # Secondary Azure Location
+$ERName = 'ExpressRoute-Sydney-ARM-Private'
+$PeerASN = '65123'
+$PriPeer = "169.254.32.0/30"
+$SecPeer = "169.254.32.4/30" 
+$Key = "STh8MxsA0fRh"
+$Vlan = '1889'
+
+New-AzureRmResourceGroup -Name $RGName -Location $Location1
+
+New-AzureRmExpressRouteCircuit -Name $ERName -ResourceGroupName $RGName -Location $Location1 -SkuTier standard -SkuFamily MeteredData -ServiceProviderName "Equinix" -PeeringLocation "Sydney" -BandwidthInMbps 200
+
+$ckt = Get-AzureRmExpressRouteCircuit -Name $ERName -ResourceGroupName $RGName
+
+Set-AzureRmExpressRouteCircuit -ExpressRouteCircuit $ckt
+
+Add-AzureRmExpressRouteCircuitPeeringConfig -Name "AzurePrivatePeering" -Circuit $ckt -PeeringType AzurePrivatePeering -PeerASN $PeerASN -PrimaryPeerAddressPrefix $PriPeer -SecondaryPeerAddressPrefix $SecPeer -VlanId $Vlan  -SharedKey $Key | Set-AzureRmExpressRouteCircuit
