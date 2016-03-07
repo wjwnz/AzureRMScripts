@@ -1,31 +1,54 @@
 # --- Set Variables for All Commands
-$vnetPrefix = '172.25.160.0/22'       # Prefix for entire vnet
-$GatewaySubnet = '172.25.160.0/28'    # Gateway Subnet for the MS Routing Domain
-$ProductionSubnet = '172.25.161.0/24' # Main Production Subnet
-$Location = 'AustraliaEast'           # Primary Azure Location
-$RGName = 'Azure-rgrp-ProdPrivate'    # Resource Group to Drop Resources Into
-$vnetName = "MWH-$Location-Internal"  # VNET Name
-$NGName = 'MWH-Sydney-POP'            # Name of the POP the ER's are in
-$NGPrefixes =                         # MWH Prefixes (Excludinging the current vNET)
-$GWIP = '159.21.128.9'                # IP Of the Primary DMZ Router in the POP
-$RMPIP = "$vnetName-gwpip"            # Name of the GW IP Asssigned by MS
-$RMVNGIP = "$vnetName-gwipc"          # NAme of the GW IP Configuration
-$RMVNGWN = "$vnetName-vnetgw"         # Name of the vnet Gateway
+$vnetPrefix1 = '172.25.160.0/22'        # Prefix for Location 1
+$vnetPrefix2 = '172.25.164.0/22'        # Prefix for Location 2
+$GatewaySubnet1 = '172.25.160.0/28'     # Gateway Subnet for the MS Routing Domain
+$GatewaySubnet2 = '172.25.164.0/28'     # Gateway Subnet for the MS Routing Domain
+$ProductionSubnet1 = '172.25.161.0/24'  # Production Subnet Location 1
+$ProductionSubnet2 = '172.25.165.0/24'  # Production Subnet Location 2
+$DevelopmentSubnet1 = '172.25.163.128/25' # Development Subnet Location 1
+$DevelopmentSubnet2 = '172.25.167.128/25' # Development Subnet Location 2
+$Location1 = 'AustraliaEast'            # Primary Azure Location
+$Location2 = 'AustraliaSouthEast'       # Secondary Azure Location
+$RGName = 'Azure-rgrp-ProdPrivate'      # Resource Group to Drop Resources Into
+$vnetName1 = "MWH-$Location1-Internal"  # VNET Name
+$vnetName2 = "MWH-$Location2-Internal"  # VNET Name
+$NGName = 'MWH-Sydney-POP'              # Name of the POP the ER's are in
+$NGPrefixes =                           # MWH Prefixes (Excludinging the current vNET)
+$GWIP = '159.21.128.9'                  # IP Of the Primary DMZ Router in the POP
+$RMPIP1 = "$vnetName-gwpip"              # Name of the GW IP Asssigned by MS
+$RMPIP2 = "$vnetName-gwpip"              # Name of the GW IP Asssigned by MS
+$RMVNGIP1 = "$vnetName-gwipc"            # NAme of the GW IP Configuration
+$RMVNGIP2 = "$vnetName-gwipc"            # NAme of the GW IP Configuration
+$RMVNGWN1 = "$vnetName-vnetgw"           # Name of the vnet Gateway
+$RMVNGWN2 = "$vnetName-vnetgw"           # Name of the vnet Gateway
 
 # --- Define Subnets
-$subnet1 = New-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -AddressPrefix $GatewaySubnet
-$subnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Production' -AddressPrefix $ProductionSubnet
+$L1subnet1 = New-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -AddressPrefix $GatewaySubnet1
+$L1subnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Production' -AddressPrefix $ProductionSubnet1
+$L1subnet3 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Development' -AddressPrefix $DevelopmentSubnet1
+
+$L2subnet1 = New-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -AddressPrefix $GatewaySubnet2
+$L2subnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Production' -AddressPrefix $ProductionSubnet2
+$L2subnet3 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Development' -AddressPrefix $DevelopmentSubnet2
 
 # --- Create VNET
-New-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $RGName -Location $Location -AddressPrefix $vnetPrefix -Subnet $subnet1, $subnet2
+New-AzureRmVirtualNetwork -Name $vnetName1 -ResourceGroupName $RGName -Location $Location1 -AddressPrefix $vnetPrefix1 -Subnet $L1subnet1, $L1subnet2, $L1subnet3
+New-AzureRmVirtualNetwork -Name $vnetName2 -ResourceGroupName $RGName -Location $Location2 -AddressPrefix $vnetPrefix2 -Subnet $L2subnet1, $L2subnet2, $L2subnet3
+
 # --- Create Local Network Gateway - This is the Device that a VPN Tunnel would terminate to.
-New-AzureRmLocalNetworkGateway -Name $NGName -ResourceGroupName $RGName -Location $Location -GatewayIpAddress $GWIP -AddressPrefix $NGPrefixes
+New-AzureRmLocalNetworkGateway -Name $NGName -ResourceGroupName $RGName -Location $Location1 -GatewayIpAddress $GWIP1 -AddressPrefix $NGPrefixes
+New-AzureRmLocalNetworkGateway -Name $NGName -ResourceGroupName $RGName -Location $Location2 -GatewayIpAddress $GWIP2 -AddressPrefix $NGPrefixes
 # --- Create a Public IP for The Azure Side of the VPN
-$gwpip= New-AzureRmPublicIpAddress -Name $RMPIP -ResourceGroupName $RGName -Location $Location -AllocationMethod Dynamic
+$gwpip1= New-AzureRmPublicIpAddress -Name $RMPIP1 -ResourceGroupName $RGName -Location $Location1 -AllocationMethod Dynamic
+$gwpip2= New-AzureRmPublicIpAddress -Name $RMPIP2 -ResourceGroupName $RGName -Location $Location2 -AllocationMethod Dynamic
 
 # --- Get the information needed to connect to the ExpressRoute Circuit
-$vnet = Get-AzureRmVirtualNetwork -Name $vnetName  -ResourceGroupName $RGName
-$subnet = Get-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -VirtualNetwork $vnet
-$gwipconfig = New-AzureRmVirtualNetworkGatewayIpConfig -Name $RMVNGIP -SubnetId $subnet.Id -PublicIpAddressId $gwpip.Id 
+$vnet1 = Get-AzureRmVirtualNetwork -Name $vnetName1  -ResourceGroupName $RGName
+$vnet2 = Get-AzureRmVirtualNetwork -Name $vnetName2  -ResourceGroupName $RGName
+$subnet1 = Get-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -VirtualNetwork $vnet1
+$subnet2 = Get-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -VirtualNetwork $vnet2
+$gwipconfig1 = New-AzureRmVirtualNetworkGatewayIpConfig -Name $RMVNGIP1 -SubnetId $subnet1.Id -PublicIpAddressId $gwpip1.Id
+$gwipconfig2 = New-AzureRmVirtualNetworkGatewayIpConfig -Name $RMVNGIP2 -SubnetId $subnet2.Id -PublicIpAddressId $gwpip2.Id 
 
-New-AzureRmVirtualNetworkGateway -Name $RMVNGWN -ResourceGroupName $RGName -Location $Location -IpConfigurations $gwipconfig -GatewayType ExpressRoute -VpnType RouteBased
+New-AzureRmVirtualNetworkGateway -Name $RMVNGWN1 -ResourceGroupName $RGName -Location $Location1 -IpConfigurations $gwipconfig1 -GatewayType ExpressRoute -VpnType RouteBased
+New-AzureRmVirtualNetworkGateway -Name $RMVNGWN2 -ResourceGroupName $RGName -Location $Location2 -IpConfigurations $gwipconfig2 -GatewayType ExpressRoute -VpnType RouteBased
