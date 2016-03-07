@@ -1,16 +1,16 @@
 # --- Set Variables for All Commands
-$vnetPrefix = '172.25.160.0/22'
-$GatewaySubnet = '172.25.160.0/28'
-$ProductionSubnet = '172.25.161.0/24'
-$Location = 'Australia East'
-$RGName = 'Azure-rgrp-ProdPrivate'
-$vnetName = 'MWH-AustraliaEast-Internal'
-$NGName = 'MWH-Sydney-POP'
-$NGPrefixes = 
-$GWIP = '159.21.128.9'
-$RMPIP = $vnetName & '-gwpip'
-$RMVNGIP = $vnetName & '-gwipc'
-$RMVNGWN = $vnetName & '-vnetgw'
+$vnetPrefix = '172.25.160.0/22'       # Prefix for entire vnet
+$GatewaySubnet = '172.25.160.0/28'    # Gateway Subnet for the MS Routing Domain
+$ProductionSubnet = '172.25.161.0/24' # Main Production Subnet
+$Location = 'AustraliaEast'           # Primary Azure Location
+$RGName = 'Azure-rgrp-ProdPrivate'    # Resource Group to Drop Resources Into
+$vnetName = "MWH-$Location-Internal"  # VNET Name
+$NGName = 'MWH-Sydney-POP'            # Name of the POP the ER's are in
+$NGPrefixes =                         # MWH Prefixes (Excludinging the current vNET)
+$GWIP = '159.21.128.9'                # IP Of the Primary DMZ Router in the POP
+$RMPIP = "$vnetName-gwpip"            # Name of the GW IP Asssigned by MS
+$RMVNGIP = "$vnetName-gwipc"          # NAme of the GW IP Configuration
+$RMVNGWN = "$vnetName-vnetgw"         # Name of the vnet Gateway
 
 # --- Define Subnets
 $subnet1 = New-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -AddressPrefix $GatewaySubnet
