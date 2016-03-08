@@ -1,0 +1,14 @@
+$RGName = "Azure-rgrp-ProdPrivate"      # Resource Group to Drop Resources Into
+$Location1 = 'AustraliaEast'            # Primary Azure Location
+$Location2 = 'AustraliaSouthEast'       # Secondary Azure Location
+$vnetName1 = "MWH-$Location1-Internal"  # VNET Name
+$vnetName2 = "MWH-$Location2-Internal"  # VNET Name
+$circuitname = "ExpressRoute-Sydney-ARM-Private"
+$RMVNGWN1 = "$vnetName1-vnetgw"           # Name of the vnet Gateway
+$RMVNGWN2 = "$vnetName2-vnetgw"           # Name of the vnet Gateway
+$ERConName = "ExpressRoute-Sydney-Connection"
+
+$circuit = Get-AzureRmExpressRouteCircuit -Name $circuitname -ResourceGroupName $RGName
+$gw1 = Get-AzureRmVirtualNetworkGateway -Name $RMVNGWN1 -ResourceGroupName $RGName
+$gw2 = Get-AzureRmVirtualNetworkGateway -Name $RMVNGWN2 -ResourceGroupName $RGName
+$connection = New-AzureRmVirtualNetworkGatewayConnection -Name $ERConName -ResourceGroupName $RGName -Location $Location1 -VirtualNetworkGateway1 $gw1 -PeerId $circuit.Id -ConnectionType ExpressRoute -debug
