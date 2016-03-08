@@ -9,7 +9,7 @@ $DevelopmentSubnet1 = '172.25.163.128/25' # Development Subnet Location 1
 $DevelopmentSubnet2 = '172.25.167.128/25' # Development Subnet Location 2
 $Location1 = 'AustraliaEast'            # Primary Azure Location
 $Location2 = 'AustraliaSouthEast'       # Secondary Azure Location
-$RGName = 'Azure-rgrp-ProdPrivate'      # Resource Group to Drop Resources Into
+$RGName = "Azure-rgrp-ProdPrivate"      # Resource Group to Drop Resources Into
 $vnetName1 = "MWH-$Location1-Internal"  # VNET Name
 $vnetName2 = "MWH-$Location2-Internal"  # VNET Name
 $NGName = 'MWH-Sydney-POP'              # Name of the POP the ER's are in
@@ -28,17 +28,20 @@ $L1subnet1 = New-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -Addres
 $L1subnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Production' -AddressPrefix $ProductionSubnet1
 $L1subnet3 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Development' -AddressPrefix $DevelopmentSubnet1
 
+# --- Create VNET
+New-AzureRmVirtualNetwork -Name $vnetName1 -ResourceGroupName $RGName -Location $Location1 -AddressPrefix $vnetPrefix1 -Subnet $L1subnet1, $L1subnet2, $L1subnet3
+
+# --- Define Subnets
 $L2subnet1 = New-AzureRmVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -AddressPrefix $GatewaySubnet2
 $L2subnet2 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Production' -AddressPrefix $ProductionSubnet2
 $L2subnet3 = New-AzureRmVirtualNetworkSubnetConfig -Name 'Development' -AddressPrefix $DevelopmentSubnet2
 
 # --- Create VNET
-New-AzureRmVirtualNetwork -Name $vnetName1 -ResourceGroupName $RGName -Location $Location1 -AddressPrefix $vnetPrefix1 -Subnet $L1subnet1, $L1subnet2, $L1subnet3
 New-AzureRmVirtualNetwork -Name $vnetName2 -ResourceGroupName $RGName -Location $Location2 -AddressPrefix $vnetPrefix2 -Subnet $L2subnet1, $L2subnet2, $L2subnet3
 
 # --- Create Local Network Gateway - This is the Device that a VPN Tunnel would terminate to.
-New-AzureRmLocalNetworkGateway -Name $NGName -ResourceGroupName $RGName -Location $Location1 -GatewayIpAddress $GWIP1 -AddressPrefix $NGPrefixes
-New-AzureRmLocalNetworkGateway -Name $NGName -ResourceGroupName $RGName -Location $Location2 -GatewayIpAddress $GWIP2 -AddressPrefix $NGPrefixes
+New-AzureRmLocalNetworkGateway -Name $NGName -ResourceGroupName $RGName -Location $Location1 -GatewayIpAddress $GWIP -AddressPrefix $NGPrefixes
+
 # --- Create a Public IP for The Azure Side of the VPN
 $gwpip1= New-AzureRmPublicIpAddress -Name $RMPIP1 -ResourceGroupName $RGName -Location $Location1 -AllocationMethod Dynamic
 $gwpip2= New-AzureRmPublicIpAddress -Name $RMPIP2 -ResourceGroupName $RGName -Location $Location2 -AllocationMethod Dynamic
